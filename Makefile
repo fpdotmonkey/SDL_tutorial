@@ -1,5 +1,9 @@
-all:
-	clang -o hello_window hello_window.c $(shell sdl2-config --cflags --libs) \
-	$(shell sdl2_image-config --cflags --libs)
+LDFLAGS=-L/usr/local/lib
+LIBS=-lSDL2 -lSDL2_image -lSDL2_ttf
+CFLAGS=$(shell sdl2-config --cflags)
 
-Adding SDL2_image has resulted in the error "Undefined symbols for architecture x86_64:".  Need to figure out how Makefiles work with respect to these things.
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+hello_window: hello_window.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
