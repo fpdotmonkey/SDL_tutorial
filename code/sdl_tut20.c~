@@ -1,0 +1,305 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+
+#include "bool.h"
+#include "LTexture.h"
+#include "LTimer.h"
+#include "dot.h"
+
+
+#define LEVEL_WIDTH 1280
+#define LEVEL_HEIGHT 960
+
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+
+#define JOYSTICK_DEAD_ZONE 8000
+
+
+
+//////////////////////
+// Global Variables //
+//////////////////////
+
+// The window we'll be rendering to
+SDL_Window* gWindow = NULL;
+
+// The window renderer
+SDL_Renderer* gRenderer = NULL;
+
+// The global font
+TTF_Font* gFont = NULL;
+
+// Text
+LTexture gInputTextTexture;
+LTexture gBGTexture;
+LTexture gPromptTexture;
+LTexture gTimeTextTexture;
+
+///////////////
+// Functions //
+///////////////
+
+// Initialize SDL and load the window
+bool init() {
+    // Initialization flag
+    bool success = true;
+    
+    // Initialize SDL
+    if ((SDL_INIT_VIDEO) < 0) {
+        printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+    } else {
+        // Set texture filtering to linear
+        if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
+            printf("Warning: Linear texture filtering not enabled");
+        }
+        
+        // Create a window
+        gWindow = SDL_CreateWindow("SDL Tutorial",
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   SCREEN_WIDTH,
+                                   SCREEN_HEIGHT,
+                                   SDL_WINDOW_SHOWN);
+        if (gWindow == NULL) {
+            printf("Window could not be created! SDL_Error: %s\n",
+                   SDL_GetError());
+            success = false;
+        } else {
+            // Create renderer for window
+            gRenderer = SDL_CreateRenderer(gWindow,
+                                           -1,
+                                           SDL_RENDERER_ACCELERATED |
+                                           SDL_RENDERER_PRESENTVSYNC);
+            if (gRenderer == NULL) {
+                printf("Renderer could not be created! SDL Error: %s\n",
+                       SDL_GetError());
+                success = false;
+            } else {
+                // Initialize renderer color
+                SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+                
+                
+                // Initialize PNG loading
+                int imgFlags = IMG_INIT_PNG;
+                if (!(IMG_Init(imgFlags) & imgFlags)) {
+                    printf("SDL_image could not initialize! SDL_image error: %s\n",
+                           IMG_GetError());
+                    success = false;
+                }
+
+                //Initialize SDL_ttf
+                if( TTF_Init() == -1 ) {
+                    printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n",
+                            TTF_GetError() );
+                    success = false;
+                }
+            }
+        }
+    }
+    
+    return success;
+}
+
+void pop_back(char* string) {
+    if (!(*string)) {
+        // Do nothing
+    } else {
+        size_t stringLen = strlen(string);
+        string[stringLen - 1] = '\0';
+    }
+}
+
+bool loadMedia() {
+    bool success = true;
+
+    gFont = TTF_OpenFont("../lazy.ttf", 28);
+    if (gFont == NULL) {
+        printf("Failed to load lazy font! TTF Error: %s\n", TTF_GetError());
+    }
+    
+    return success;
+}
+
+// Deallocate memory and shut down SDL
+void closeWindow() {
+    // Deallocate surface
+    freeLTexture(gPromptTexture);
+    freeLTexture(gTimeTextTexture);
+    
+    // Destroy Window
+    SDL_DestroyRenderer(gRenderer);
+    SDL_DestroyWindow(gWindow);
+    gRenderer = NULL;
+    gWindow = NULL;
+    
+    // Quit SDL subsystems
+    IMG_Quit();
+    SDL_Quit();
+}
+
+
+int main(int argc, char* args[]) {
+    // Start up SDL and create a window
+    if (!init()) {
+        printf("Failed to initialize!\n");
+    } else {
+        // Load media
+        if (!loadMedia()) {
+            printf("Failed to load media!\n");
+        } else {
+
+            // Main loop flag
+            bool quit = false;
+        
+            // Event Handler
+            SDL_Event e;
+
+            // Set text color to black
+            SDL_Color textColor = { 0, 0, 0, 255 };
+
+            // The current input text
+            const size_t maxInputSize = 50;
+            char inputText[maxInputSize] = "Some Text";
+            gInputTextTexture = loadFromRenderedText(inputText,
+                                                     textColor,
+                                                     gFont,
+                                                     gRenderer);
+
+            SDL_StartTextInput();
+
+            /* Dot dot; */
+
+            /* initDot(&dot, SCREEN_WIDTH/2, SCREEN_HEIGHT/2); */
+
+            /* SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }; */
+
+            /* SDL_Rect wall; */
+            /* wall.x = 300; */
+            /* wall.y = 40; */
+            /* wall.w = 40; */
+            /* wall.h = 400; */
+            
+            while (!quit) {
+                // Render text flag
+                bool renderText = false;
+                
+                while (SDL_PollEvent(&e) != 0) { // Pulls events off the event
+                                                 // queue until the event queue
+                                                 // is empty
+                    // User requests a quit
+                    if (e.type == SDL_QUIT) {
+                        quit = true;
+                    } else if (e.key.keysym.sym == SDLK_BACKSPACE
+                               && e.key.repeat == 0
+                               && strlen(inputText) > 0) {
+                        // Delete last character
+                        pop_back(inputText);
+                        renderText = true;
+                    } else if (e.key.keysym.sym == SDLK_c
+                               && SDL_GetModState() & KMOD_LGUI) {
+                        // Copy inputText to clipboard on l_cmd-c
+                        SDL_SetClipboardText(inputText);
+                    } else if (e.key.keysym.sym == SDLK_v
+                               && SDL_GetModState() & KMOD_LGUI) {
+                        // Replace inputText with the clipboard on l_cmd-v
+                        memset(inputText, '\0', strlen(inputText));
+                        strncpy(inputText, SDL_GetClipboardText(), maxInputSize);
+                        inputText[maxInputSize-1] = '\0';
+                        renderText = true;
+                    } else if (e.type == SDL_TEXTINPUT
+                               && strlen(inputText) < maxInputSize) {
+                        // Handle text input
+                        
+                        // if not copy nor paste
+                        if (!(SDL_GetModState() & KMOD_LGUI
+                              || e.text.text[0] == 'c'
+                              || e.text.text[0] == 'C'
+                              || e.text.text[0] == 'v'
+                              || e.text.text[0] == 'V')) {
+                            // Append character
+                            if (strlen(e.text.text) + 1 >
+                                sizeof(inputText) - strlen(inputText)) {
+                                // Do nothing
+                            } else {
+                                strncat(inputText, e.text.text,
+                                        sizeof(inputText)
+                                        - strlen(inputText) - 1);
+                                renderText = true;
+                            }
+                        }
+                    }
+
+                    /* handleEventDot(&dot, &e); */
+                }
+                // Render text if needed
+                if (renderText) {
+                    // if text is not empty
+                    if (strcmp(inputText, "")) {
+                        // Render the new text
+                        gInputTextTexture = loadFromRenderedText(inputText,
+                                                                 textColor,
+                                                                 gFont,
+                                                                 gRenderer);
+                    } else { // Text is empty
+                        // Render " " (SDL_ttf won't render an empty string)
+                        gInputTextTexture = loadFromRenderedText(" ",
+                                                                 textColor,
+                                                                 gFont,
+                                                                 gRenderer);
+                    }
+                }
+                /* updatePositionDot(&dot, wall); */
+
+                /* // Center camera over the dot */
+                /* camera.x = (dot.mPosX - SCREEN_WIDTH/2); */
+                /* camera.y = (dot.mPosY - SCREEN_HEIGHT/2); */
+
+                /* // Keep the camera inbounds */
+                /* if (camera.x < 0) { */
+                /*     camera.x = 0; */
+                /* } */
+                
+                /* if (camera.y < 0) { */
+                /*     camera.y = 0; */
+                /* } */
+
+                /* if (camera.x > LEVEL_WIDTH - camera.w) { */
+                /*     camera.x = LEVEL_WIDTH - camera.w; */
+                /* } */
+
+                /* if (camera.y > LEVEL_HEIGHT - camera.h) { */
+                /*     camera.y = LEVEL_HEIGHT - camera.h; */
+                /* } */
+                    
+                // Clear screen
+                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_RenderClear(gRenderer);
+
+                render(gRenderer,
+                       gPromptTexture,
+                       (SCREEN_WIDTH-gPromptTexture.mWidth)/2, 0);
+                render(gRenderer,
+                       gInputTextTexture,
+                       (SCREEN_WIDTH-gInputTextTexture.mWidth)/2,
+                       gPromptTexture.mHeight);
+                
+                // Update screen
+                SDL_RenderPresent(gRenderer);
+            }
+        }
+    }
+    // Disable text input
+    SDL_StopTextInput();
+
+    // Free up resources and close SDL
+    closeWindow();
+    
+    return 0;
+}

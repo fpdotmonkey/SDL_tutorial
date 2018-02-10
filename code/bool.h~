@@ -1,0 +1,11 @@
+//
+// bool.h
+//
+// Copyright (c) 2018 Fletcher Porter
+//
+
+// C doesn't have bool, so gotta make it myself
+typedef enum boolean {
+    true = 1,
+    false = 0
+} bool;

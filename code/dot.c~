@@ -1,0 +1,138 @@
+//
+// dot.c
+//
+// Copyright (c) 2018 Fletcher Porter
+//
+
+#include "dot.h"
+
+void initDot(Dot *dot, int xi, int yi, int w, int h) {
+    dot->mPosX = xi;
+    dot->mPosY = yi;
+    dot->mWidth = w;
+    dot->mHeight = h;
+    dot->mVelX = 0;
+    dot->mVelY = 0;
+
+    dot->mLTexture = loadLTexture("dot.bmp", gRenderer);
+    if (dot->mLTexture.mTexture == NULL) {
+        printf("Failed to load dot texture!\n");
+    }
+
+    dot->mCollider.x = dot->mPosX;
+    dot->mCollider.y = dot->mPosY;
+    dot->mCollider.w = dot->mWidth;
+    dot->mCollider.h = dot->mHeight;
+}
+
+void closeDot(Dot *dot) {
+    freeLTexture(dot->mLTexture);
+}
+
+void handleEventDot(Dot *dot, SDL_Event* e) {
+    const int DV = 10;
+    if (e->type == SDL_KEYDOWN && e->key.repeat == 0) {
+        // Adjust the velocity
+        switch (e->key.keysym.sym) {
+        case SDLK_UP:
+            dot->mVelY -= DV;
+            break;
+
+        case SDLK_DOWN:
+            dot->mVelY += DV;
+            break;
+
+        case SDLK_LEFT:
+            dot->mVelX -= DV;
+            break;
+
+        case SDLK_RIGHT:
+            dot->mVelX += DV;
+            break;
+        }
+    }
+
+    if (e->type == SDL_KEYUP && e->key.repeat == 0) {
+        // Adjust the velocity
+        switch (e->key.keysym.sym) {
+        case SDLK_UP:
+            dot->mVelY += DV;
+            break;
+
+        case SDLK_DOWN:
+            dot->mVelY -= DV;
+            break;
+
+        case SDLK_LEFT:
+            dot->mVelX += DV;
+            break;
+
+        case SDLK_RIGHT:
+            dot->mVelX -= DV;
+            break;
+        }
+    }
+}
+
+bool checkCollision(SDL_Rect a, SDL_Rect b) {
+    // The sides of the rectangles
+    int leftA, leftB;
+    int rightA, rightB;
+    int topA, topB;
+    int bottomA, bottomB;
+
+    leftA = a.x;
+    rightA = a.x + a.w;
+    topA = a.y;
+    bottomA = a.y + a.h;
+
+    leftB = b.x;
+    rightB = b.x + b.w;
+    topB = b.y;
+    bottomB = b.y + b.h;
+
+    if (bottomA <= topB) {
+        return false;
+    }
+
+    if (topA <= bottomB) {
+        return false;
+    }
+
+    if (rightA <= leftB) {
+        return false;
+    }
+
+    if (leftA >= rightB) {
+        return false;
+    }
+
+    return true;
+}
+
+void updatePositionDot(Dot *dot, SDL_Rect wall) {    
+    dot->mPosX += dot->mVelX;
+    dot->mPosY += dot->mVelY;
+    dot->mCollider.x = dot->mPosX;
+    dot->mCollider.y = dot->mPosY;
+
+    if ((dot->mPosX < 0)
+        || (dot->mPosX + DOT_WIDTH > LEVEL_WIDTH)) {
+        // Move back
+        dot->mPosX -= dot->mVelX;
+        dot->mCollider.x = dot->mPosX;
+    }
+
+    if ((dot->mPosY < 0)
+        || (dot->mPosY + DOT_WIDTH > LEVEL_HEIGHT)) {
+        // Move back
+        dot->mPosY -= dot->mVelY;
+        dot->mCollider.x = dot->mPosY;
+    }
+ 
+}
+
+void renderDot(Dot *dot, int camX, int camY) {
+    // Render dot relative to camera
+    render(gRenderer, dot->mLTexture, dot->mPosX - camX, dot->mPosY - camY);
+}

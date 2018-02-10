@@ -1,0 +1,29 @@
+program_NAME := sdl_tut20
+program_C_SRCS := $(wildcard *.c)
+program_C_OBJS := $(program_C_SRCS:.c=.o)
+
+LDFLAGS = -L/usr/local/lib
+LIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+
+CFLAGS = $(shell sdl2-config --cflags)
+
+$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS)
+
+.PHONY: all clean distclean
+
+all: $(program_NAME)
+
+$(program_NAME): $(program_C_OBJS)
+	$(CC) $(CFLAGS) $(program_C_OBJS) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+clean:
+	@~ $(RM) $(program_NAME)
+	@~ $(RM) $(program_C_OBJS)
+
+distclean: clean
+
+# %.o: %.c
+# 	$(CC) $(CFLAGS) -c -o $@ $^
+
+# sdl_tut20: sdl_tut20.o
+# 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)

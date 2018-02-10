@@ -1,0 +1,44 @@
+#include <SDL.h>
+#include <SDL_ttf.h>
+
+#include "LTexture.h"
+
+int main(int argc, char* argv[]) {
+    SDL_Window* window = NULL;
+
+    gWindow = SDL_CreateWindow("SDL Tutorial",
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   680,
+                                   400,
+                                   SDL_WINDOW_SHOWN);
+    
+    SDL_Renderer* renderer = NULL;
+
+    gRenderer = SDL_CreateRenderer(gWindow,
+                                   -1,
+                                   SDL_RENDERER_ACCELERATED |
+                                   SDL_RENDERER_PRESENTVSYNC);
+
+    IMG_Init(IMG_INIT_PNG);
+    TTF_Init();
+
+    
+    TTF_Font* font = NULL;
+
+    font = TTF_OpenFont("../lazy.ttf", 28);
+
+    SDL_Color textColor = { 0, 0, 0, 255 };
+
+    char* inputText = "Some Text";
+    LTexture inputTextTexture = loadFromRenderedText(inputText,
+                                                     textColor,
+                                                     font,
+                                                     renderer);
+
+    freeLTexture(inputTextTexture);
+    TTF_CloseFont(font);
+    SDL_DestroyRenderer(renderer);
+
+    return 0;
+}
