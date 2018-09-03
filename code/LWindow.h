@@ -32,9 +32,6 @@ typedef struct {
 // defined prior to this function being called
 bool LW_init(LWindow* window, int screenWidth, int screenHeight);
 
-// Generates an SDL_Renderer* for an LWindow
-SDL_Renderer* LW_createRenderer(LWindow window);
-
 // Handles window events for the window
 void LW_handleEvent(LWindow* window, SDL_Event* e);
 
