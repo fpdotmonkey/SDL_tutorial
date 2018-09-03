@@ -4,14 +4,16 @@
 // Copyright (c) 2018 Fletcher Porter
 //
 
-// include guards
-#ifndef BOOL_H
-#define BOOL_H
+#ifndef __BOOL_H__
+#define __BOOL_H__
+
+#include <SDL.h>
 
 // C doesn't have bool, so gotta make it myself
 typedef enum boolean {
-    true = 1,
-    false = 0
+    true = SDL_TRUE,
+    false = SDL_FALSE
 } bool;
 
-#endif
+
+#endif // !__BOOL_H__
