@@ -7,7 +7,6 @@
 #include "LWindow.h"
 
 static int prepareForRender(LWindow* window);
-static void setFullscreenTo(LWindow* window, bool active);
 
 bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenHeight) {
     window->mWindow = SDL_CreateWindow("SDL Tutorial",
@@ -20,8 +19,9 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
         window->mWidth = screenWidth;
         window->mHeight = screenHeight;
         
-        window->mMouseFocus = true;
-        window->mKeyboardFocus = true;
+        window->mMouseFocus = false;
+        window->mKeyboardFocus = false;
+        LW_setFullScreenStateTo(window, false);
 
         window->mRenderer = SDL_CreateRenderer(window->mWindow,
                                                -1,
@@ -96,29 +96,40 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
 
             // Window has lost keyboard focus
         case SDL_WINDOWEVENT_FOCUS_LOST:
+            if (window->mFullScreen) {
+                /* setFullScreenTo(window, false); */
+            }
             window->mKeyboardFocus = false;
             updateCaption = true;
             break;
 
             // window->minimized
         case SDL_WINDOWEVENT_MINIMIZED:
+            PRINT("Minimized");
             window->mMinimized = true;
             break;
 
             // window->maximized
         case SDL_WINDOWEVENT_MAXIMIZED:
-            window->mMinimized = false;
+            PRINT("Maximized");
+            if (window->mKeyboardFocus) {
+            }
             break;
 
             // Window restored
         case SDL_WINDOWEVENT_RESTORED:
+            PRINT("restored");
+            if (window->mFullScreen) {
+                /* setFullScreenTo(window, false); */
+            }
             window->mMinimized = false;
             break;
 
             // Hide on close
         case SDL_WINDOWEVENT_CLOSE:
             // @FIX when the window is fullscreen and you close out, it doesn't exit fullscreen
-            setFullscreenTo(window, false);
+            PRINT("closing window")
+            /* setFullScreenTo(window, false); */
             SDL_HideWindow(window->mWindow);
             window->mShown = false;
             break;
@@ -153,11 +164,14 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             break;
 
         case SDLK_RETURN:
-            if (window->mFullScreen) {
-                setFullscreenTo(window, false);
-            } else {
-                setFullscreenTo(window, true);
-                window->mMinimized = false;
+            if (window->mKeyboardFocus) {
+                PRINT(".");
+                if (window->mFullScreen) {
+                    LW_setFullScreenStateTo(window, false);
+                } else {
+                    LW_setFullScreenStateTo(window, true);
+                    window->mMinimized = false;
+                }
             }
             break;
         }
@@ -173,6 +187,11 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             // Move the window to the center of the next display
         }
     }
+}
+
+void LW_setFullScreenStateTo(LWindow* window, bool active) {
+    SDL_SetWindowFullscreen(window->mWindow, active);
+    window->mFullScreen = active;
 }
 
 void LW_focus(LWindow* window) {
@@ -223,7 +242,7 @@ bool LW_hasMouseFocus(LWindow* window) {
 bool LW_hasKeyboardFocus(LWindow* window) {
     return window->mKeyboardFocus;
 }
-bool LW_isFullscreen(LWindow* window) {
+bool LW_isFullScreen(LWindow* window) {
     return window->mFullScreen;
 }
 bool LW_isMinimized(LWindow* window) {
@@ -238,9 +257,4 @@ bool LW_isShown(LWindow* window) {
 static int prepareForRender(LWindow* window) {
     SDL_SetRenderDrawColor(window->mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
     return SDL_RenderClear(window->mRenderer);
-}
-
-static void setFullscreenTo(LWindow* window, bool active) {
-    SDL_SetWindowFullscreen(window->mWindow, active);
-    window->mFullScreen = active;
 }

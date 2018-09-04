@@ -36,6 +36,9 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
 // Handles window events for the window
 void LW_handleEvent(LWindow* window, SDL_Event* event);
 
+// Change the fullscreen state of the window
+void LW_setFullScreenStateTo(LWindow* window, bool active);
+
 // Moves the window to the front of the screen
 void LW_focus(LWindow* window);
 
@@ -53,7 +56,7 @@ int LW_widthOf(LWindow* window);
 int LW_heightOf(LWindow* window);
 bool LW_hasMouseFocus(LWindow* window);
 bool LW_hasKeyboardFocus(LWindow* window);
-bool LW_isFullscreen(LWindow* window);
+bool LW_isFullScreen(LWindow* window);
 bool LW_isMinimized(LWindow* window);
 bool LW_isShown(LWindow* window);
 
