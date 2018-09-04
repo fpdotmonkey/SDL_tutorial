@@ -9,8 +9,8 @@
 
 #include <SDL.h>
 
-// C doesn't have bool, so gotta make it myself
-typedef enum boolean {
+// Wraps around SDL_bool so it looks like a regular bool
+typedef enum boolSDL {
     true = SDL_TRUE,
     false = SDL_FALSE
 } bool;
