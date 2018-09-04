@@ -117,6 +117,7 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
 
             // Hide on close
         case SDL_WINDOWEVENT_CLOSE:
+            // @FIX when the window is fullscreen and you close out, it doesn't exit fullscreen
             setFullscreenTo(window, false);
             SDL_HideWindow(window->mWindow);
             window->mShown = false;
@@ -160,7 +161,7 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             }
             break;
         }
-
+        // @FIX windows do not switch displays on button presses (or ever!)
         if (switchDisplay) {
             // Bound the display index
             if (window->mWindowDisplayID < 0) {
