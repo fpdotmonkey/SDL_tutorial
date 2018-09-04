@@ -21,7 +21,6 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
         
         window->mMouseFocus = false;
         window->mKeyboardFocus = false;
-        LW_setFullScreenStateTo(window, false);
 
         window->mRenderer = SDL_CreateRenderer(window->mWindow,
                                                -1,
@@ -38,6 +37,8 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
 
             // Flag as opened
             window->mShown = true;
+            LW_setFullScreenStateTo(window, false);
+            window->mMinimized = false;
         } else {
             ErrorSDL("Renderer coudl not be created");
             SDL_DestroyWindow(window->mWindow);
@@ -97,7 +98,7 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             // Window has lost keyboard focus
         case SDL_WINDOWEVENT_FOCUS_LOST:
             if (window->mFullScreen) {
-                /* setFullScreenTo(window, false); */
+                LW_setFullScreenStateTo(window, false);
             }
             window->mKeyboardFocus = false;
             updateCaption = true;
@@ -105,20 +106,17 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
 
             // window->minimized
         case SDL_WINDOWEVENT_MINIMIZED:
-            PRINT("Minimized");
             window->mMinimized = true;
             break;
 
             // window->maximized
         case SDL_WINDOWEVENT_MAXIMIZED:
-            PRINT("Maximized");
             if (window->mKeyboardFocus) {
             }
             break;
 
             // Window restored
         case SDL_WINDOWEVENT_RESTORED:
-            PRINT("restored");
             if (window->mFullScreen) {
                 /* setFullScreenTo(window, false); */
             }
@@ -127,9 +125,7 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
 
             // Hide on close
         case SDL_WINDOWEVENT_CLOSE:
-            // @FIX when the window is fullscreen and you close out, it doesn't exit fullscreen
-            PRINT("closing window")
-            /* setFullScreenTo(window, false); */
+            LW_setFullScreenStateTo(window, false);
             SDL_HideWindow(window->mWindow);
             window->mShown = false;
             break;
