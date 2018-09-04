@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "bool.h"
+#include "LPrints.h"
 #include "LWindow.h"
 
 
@@ -11,8 +12,11 @@
 int main(int argc, char **argv) {
     // initialize
     LWindow windows[NUMBER_OF_WINDOWS];
+    int numberOfDisplays = 0;
+    SDL_Rect* displayBounds = NULL;
     for (int i = 0; i < NUMBER_OF_WINDOWS; ++i) {
-        if (! LW_init(&windows[i], SCREEN_WIDTH, SCREEN_HEIGHT)) {
+        if (! LW_init(&windows[i], numberOfDisplays, SCREEN_WIDTH, SCREEN_HEIGHT)) {
+            ErrorSDL("Could not initialize window");
             printf("Could not initialize window %i! SDL_Error: %s\n", i, SDL_GetError());
         }
     }
@@ -61,9 +65,7 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        // @FIX application doesn't quit when all windows are closed
         if (allWindowsAreClosed) { // Quit the application if all the windows are closed
-            printf("all windows are closed\n");
             quit = true;
         }
     }

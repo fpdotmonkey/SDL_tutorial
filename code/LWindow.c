@@ -6,12 +6,10 @@
 
 #include "LWindow.h"
 
-static int prepareForRender(LWindow* window) {
-    SDL_SetRenderDrawColor(window->mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    return SDL_RenderClear(window->mRenderer);
-}
+static int prepareForRender(LWindow* window);
+static void setFullscreenTo(LWindow* window, bool active);
 
-bool LW_init(LWindow* window, int screenWidth, int screenHeight) {
+bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenHeight) {
     window->mWindow = SDL_CreateWindow("SDL Tutorial",
                                        SDL_WINDOWPOS_UNDEFINED,
                                        SDL_WINDOWPOS_UNDEFINED,
@@ -35,16 +33,18 @@ bool LW_init(LWindow* window, int screenWidth, int screenHeight) {
 
             // Grab window identifier
             window->mWindowID = SDL_GetWindowID(window->mWindow);
+            window->mWindowDisplayID = SDL_GetWindowDisplayIndex(window->mWindow);
+            window->mNumberOfDisplays = numberOfDisplays;
 
             // Flag as opened
             window->mShown = true;
         } else {
-            printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+            ErrorSDL("Renderer coudl not be created");
             SDL_DestroyWindow(window->mWindow);
             window->mWindow = NULL;
         }
     } else {
-        printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
+        ErrorSDL("Window could not be created");
     }
 
     return window->mWindow != NULL && window->mRenderer != NULL;
@@ -58,7 +58,13 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
         bool updateCaption = false;
 
         switch (event->window.event) {
-            // Get new dimensions and repaint on window size change
+            // Window moves
+        case SDL_WINDOWEVENT_MOVED:
+            window->mWindowDisplayID = SDL_GetWindowDisplayIndex(window->mWindow);
+            updateCaption = true;
+            break;
+            
+            // Get new dimensions and repaint on window size changed
         case SDL_WINDOWEVENT_SIZE_CHANGED:
             window->mWidth = event->window.data1;
             window->mHeight = event->window.data2;
@@ -111,7 +117,9 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
 
             // Hide on close
         case SDL_WINDOWEVENT_CLOSE:
+            setFullscreenTo(window, false);
             SDL_HideWindow(window->mWindow);
+            window->mShown = false;
             break;
         }
  
@@ -120,8 +128,9 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             char* caption = NULL;
 
             asprintf(&caption,
-                     "SDL Tutorial %i - MouseFocus: %s, KeyboardFocus: %s",
+                     "SDL Tutorial ID: %i Display: %i - MouseFocus: %s, KeyboardFocus: %s",
                      window->mWindowID,
+                     window->mWindowDisplayID,
                      (window->mMouseFocus) ? "On" : "Off",
                      (window->mKeyboardFocus) ? "On" : "Off");
             SDL_SetWindowTitle(window->mWindow, caption);
@@ -129,13 +138,38 @@ void LW_handleEvent(LWindow* window, SDL_Event* event) {
             free(caption);
         }
         
-    } else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_RETURN) {
-        if (window->mFullScreen) {
-            SDL_SetWindowFullscreen(window->mWindow, false);
-        } else {
-            SDL_SetWindowFullscreen(window->mWindow, true);
-            window->mFullScreen = true;
-            window->mMinimized = false;
+    } else if (event->type == SDL_KEYDOWN) {
+        bool switchDisplay = false;
+        switch (event->key.keysym.sym) {
+        case SDLK_UP:
+            ++window->mWindowDisplayID;
+            switchDisplay = true;
+            break;
+
+        case SDLK_DOWN:
+            --window->mWindowDisplayID;
+            switchDisplay = true;
+            break;
+
+        case SDLK_RETURN:
+            if (window->mFullScreen) {
+                setFullscreenTo(window, false);
+            } else {
+                setFullscreenTo(window, true);
+                window->mMinimized = false;
+            }
+            break;
+        }
+
+        if (switchDisplay) {
+            // Bound the display index
+            if (window->mWindowDisplayID < 0) {
+                window->mWindowDisplayID = window->mNumberOfDisplays - 1;
+            } else if (window->mWindowDisplayID >= window->mNumberOfDisplays) {
+                window->mWindowDisplayID = 0;
+            }
+
+            // Move the window to the center of the next display
         }
     }
 }
@@ -160,15 +194,52 @@ void LW_render(LWindow* window) {
     }
 }
 
-bool LW_isShown(LWindow* window) {
-    return window->mShown;
-}
-
 void LW_free(LWindow* window) {
     // Destroy Window
     SDL_DestroyWindow(window->mWindow);
+    SDL_DestroyRenderer(window->mRenderer);
     window->mWindow = NULL;
     window->mRenderer = NULL;
 }
 
 
+// Accessors
+int LW_windowIDOf(LWindow* window){
+    return window->mWindowID;
+}
+int LW_windowDisplayIDOf(LWindow* window) {
+    return window->mWindowDisplayID;
+}
+int LW_widthOf(LWindow* window) {
+    return window->mWidth;
+}
+int LW_heightOf(LWindow* window) {
+    return window->mHeight;
+}
+bool LW_hasMouseFocus(LWindow* window) {
+    return window->mMouseFocus;
+}
+bool LW_hasKeyboardFocus(LWindow* window) {
+    return window->mKeyboardFocus;
+}
+bool LW_isFullscreen(LWindow* window) {
+    return window->mFullScreen;
+}
+bool LW_isMinimized(LWindow* window) {
+    return window->mMinimized;
+}
+bool LW_isShown(LWindow* window) {
+    return window->mShown;
+}
+
+
+// Static methods
+static int prepareForRender(LWindow* window) {
+    SDL_SetRenderDrawColor(window->mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    return SDL_RenderClear(window->mRenderer);
+}
+
+static void setFullscreenTo(LWindow* window, bool active) {
+    SDL_SetWindowFullscreen(window->mWindow, active);
+    window->mFullScreen = active;
+}
