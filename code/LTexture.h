@@ -4,44 +4,58 @@
 // Copyright (c) 2018 Fletcher Porter
 //
 
-#ifndef LTEXTURE_H
-#define LTEXTURE_H
+#ifndef __LTEXTURE_H__
+#define __LTEXTURE_H__
 
 
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
-// Wrapper struct for textures, allows for easy access to width and height
+#include "bool.h"
+#include "LWindow.h"
+
 typedef struct {
-    SDL_Texture* mTexture;
-    int mWidth;
-    int mHeight;
+    SDL_Texture* texture;
+
+    SDL_Rect *clippingRectangle;
+    double drawAngle;
+    SDL_Point *drawCenter;
+    SDL_RendererFlip drawFlip;
+    
+    TTF_Font* textFont;
+    SDL_Color textColor;
+
+    int width;
+    int height;
 } LTexture;
 
+
+bool LT_init(LTexture *texture);
+
+void LT_free(LTexture *texture);
+
 // Loads image at specified path
-LTexture loadLTexture(char* path, SDL_Renderer* renderer);
+bool LT_loadImage(LTexture *texture, LWindow *window, char* path);
+
+bool LT_loadFont(LTexture *texture, char* path);
+
+void LT_setTextColor(LTexture *texture, SDL_Color toColor);
 
 // Creates image from font string
-LTexture loadFromRenderedText(char* textureText,
-                              SDL_Color textColor,
-                              TTF_Font* font,
-                              SDL_Renderer* renderer);
+bool LT_generateText(LTexture *texture,
+                     LWindow *window,
+                     char *textureText);
 
-void freeLTexture(LTexture toFree);
+void LT_setDrawParameters(LTexture *texture,
+                          SDL_Rect *renderClippingRectangle,
+                          double renderAngle,
+                          SDL_Point *renderCenter,
+                          SDL_RendererFlip rendererFlip);
 
-// Renders texture at given point
-void render(SDL_Renderer* renderer, LTexture toRender, int x, int y);
-
-// Renders texture at a given point and clipping
-void render_c(SDL_Renderer* renderer, LTexture toRender, int x, int y,
-               SDL_Rect* clip);
-
-// Renders texture at given point and clipping with a rotation,
-// translation, and flip
-void render_ct(SDL_Renderer* renderer, LTexture toRender, int x, int y,
-               SDL_Rect* clip,
-               double angle, SDL_Point* center, SDL_RendererFlip flip);
+// Draws a texture with previously set draw parameters to window to be rendered
+void LT_draw(LTexture *texture, LWindow *window,
+             int x, int y, int width, int height);
 
 
-#endif
+#endif // __LTEXTURE_H__

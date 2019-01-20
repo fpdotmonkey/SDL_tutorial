@@ -10,6 +10,8 @@
 #include <stdio.h>
 
 #include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #ifdef __DEBUG__
 #define PRINT(...) do {           \
@@ -22,7 +24,11 @@
 
 
 int ErrorSDL(char *description);
-
+int ErrorSDL_path(char *description, char *path);
+int ErrorIMG(char *description);
+int ErrorIMG_path(char *description, char *path);
+int ErrorTTF(char *description);
+int ErrorTTF_path(char *description, char *path);
 
 
 #endif // !__LPRINTS_H__

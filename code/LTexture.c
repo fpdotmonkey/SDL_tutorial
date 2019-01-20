@@ -6,21 +6,53 @@
 
 #include "LTexture.h"
 
-// Loads image at specified path
-LTexture loadLTexture(char* path, SDL_Renderer* renderer) {
-    // Prepare output variable
-    LTexture newLTexture = { NULL, 0, 0 };
 
+bool LT_init(LTexture *texture) {
+    texture->texture = NULL;
+    
+    texture->clippingRectangle = NULL;
+    texture->drawAngle = 0.0;
+    texture->drawCenter = NULL;
+    texture->drawFlip = SDL_FLIP_NONE;
+
+    texture->textFont = NULL;
+    /* texture->textColor = { 0, 0, 0, 0xFF };  // Black */
+
+    texture->width = 0;
+    texture->height = 0;
+    
+    return true;
+}
+
+void LT_free(LTexture *texture) {
+    if (texture->texture != NULL) {
+        SDL_DestroyTexture(texture->texture);
+        texture->width = 0;
+        texture->height = 0;
+    }
+
+    texture->clippingRectangle = NULL;
+    texture->drawCenter = NULL;
+    
+    if (texture->textFont != NULL) {
+        TTF_CloseFont(texture->textFont);
+    }
+
+    texture = NULL;
+}
+
+// Loads image at specified path
+bool LT_loadImage(LTexture *texture, LWindow *window, char* fromPath) {
     // Load image at specified path
-    SDL_Surface* loadedSurface = IMG_Load(path);
+    SDL_Surface* loadedSurface = IMG_Load(fromPath);
     if (loadedSurface == NULL) {
-        printf("Unable to load image %s! SDL_image Error: %s\n",
-               path,
-               IMG_GetError());
+        ErrorIMG_path("Unable to load image!", fromPath);
+
+        return false;
     } else {
         // Color key image
         SDL_SetColorKey(loadedSurface,
-                        SDL_TRUE,
+                        true,
                         SDL_MapRGB(loadedSurface->format,
                                    0,
                                    0xFF,
@@ -28,117 +60,136 @@ LTexture loadLTexture(char* path, SDL_Renderer* renderer) {
             );
 
         // Create texture from surface pixels
-        newLTexture.mTexture = SDL_CreateTextureFromSurface(renderer,
-                                                            loadedSurface);
-        if (newLTexture.mTexture == NULL) {
-            printf("Unable to create texture from %s! SDL Error: %s\n",
-                   path, SDL_GetError());
+        texture->texture = SDL_CreateTextureFromSurface(window->mRenderer,
+                                                        loadedSurface);
+        if (texture->texture == NULL) {
+            ErrorSDL_path("Unable to create texture!", fromPath);
         } else {
             // Get image dimensions
-            newLTexture.mWidth = loadedSurface->w;
-            newLTexture.mHeight = loadedSurface->h;
+            texture->width = loadedSurface->w;
+            texture->height = loadedSurface->h;
         }
 
         // Get rid of old loaded surface
         SDL_FreeSurface(loadedSurface);
+
+        return true;
     }
-        
-    return newLTexture;;
 }
 
+bool LT_loadFont(LTexture *texture, char* fromPath);
+
+void LT_setTextColor(LTexture *texture, SDL_Color toColor);
+
 // Creates image from font string
-LTexture loadFromRenderedText(char* textureText,
-                              SDL_Color textColor,
-                              TTF_Font* font,
-                              SDL_Renderer* renderer) {
-    // Prepare output
-    LTexture newLTexture; 
+bool LT_generateText(LTexture *texture,
+                     LWindow *window,
+                     char *textureText) {
 
     // TTF_RenderText_Solid is not the only text renderer available
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font,
+    SDL_Surface* textSurface = TTF_RenderText_Solid(texture->textFont,
                                                     textureText,
-                                                    textColor);
+                                                    texture->textColor);
     if (textSurface == NULL) {
-        printf("Unable to render text surface! SDL_ttf Error: %s\n",
-               TTF_GetError());        
+        ErrorTTF("Unable to render text surface!");
+        
+        return false;
     } else {
         //Create texture from surface pixels
-        newLTexture.mTexture = SDL_CreateTextureFromSurface(renderer,
-                                                            textSurface);
-        if (newLTexture.mTexture == NULL) {
-            printf("Unable to create texture from rendered text! SDL Error: %s\n",
-                   SDL_GetError());
+        texture->texture = SDL_CreateTextureFromSurface(window->mRenderer,
+                                                        textSurface);
+        if (texture->texture == NULL) {
+            ErrorSDL("Unable to create texture from rendered text!");
+
+            return false;
         } else {
             // Get image dimensions
-            newLTexture.mWidth = textSurface->w;
-            newLTexture.mHeight = textSurface->h;
+            texture->width = textSurface->w;
+            texture->height = textSurface->h;
         }
 
         // Get rid of old surface
         SDL_FreeSurface(textSurface);
-    }
 
-    return newLTexture;    
+        return true;
+    }
 }
 
-void freeLTexture(LTexture toFree) {
-    if (toFree.mTexture != NULL) {
-        SDL_DestroyTexture(toFree.mTexture);
-        toFree.mWidth = 0;
-        toFree.mHeight = 0;
+void LT_setDrawParameters(LTexture *texture,
+                          SDL_Rect *clippingRectangle,
+                          double drawAngle,
+                          SDL_Point *drawCenter,
+                          SDL_RendererFlip drawFlip) {
+    if (clippingRectangle != NULL) {
+        texture->clippingRectangle = clippingRectangle;
     }
+
+    texture->drawAngle = drawAngle;
+    texture->drawCenter = drawCenter;
+    texture->drawFlip = drawFlip;
 }
 
 // Renders texture at given point
-void render(SDL_Renderer* renderer, LTexture toRender, int x, int y) {    
+void LT_draw(LTexture *texture, LWindow *window,
+             int x, int y, int width, int height) {    
     // Set rendering space
-    SDL_Rect renderQuad = { x, y, toRender.mWidth, toRender.mHeight };
+    SDL_Rect renderQuad = { x, y, width, height };
 
-    // Render to screen
-    SDL_RenderCopyEx(renderer, toRender.mTexture, NULL, &renderQuad,
-                     0.0, NULL, SDL_FLIP_NONE);
-}
-
-// Renders texture at given point
-void render_c(SDL_Renderer* renderer, LTexture toRender, int x, int y,
-               SDL_Rect* clip) {
-    // USEFUL DEFAULT VALUES:
-    // clip = NULL
+    /* if (texture->clippingRectangle != NULL) { */
+    /*     renderQuad.w = texture->clippingRectangle->w; */
+    /*     renderQuad.h = texture->clippingRectangle->h; */
+    /* } */
     
-    // Set rendering space
-    SDL_Rect renderQuad = { x, y, toRender.mWidth, toRender.mHeight };
-
-    // Set clip rendering dimensions
-    if (clip != NULL) {
-        renderQuad.w = clip->w;
-        renderQuad.h = clip->h;
-    }
-
     // Render to screen
-    SDL_RenderCopyEx(renderer, toRender.mTexture, clip, &renderQuad,
-                     0.0, NULL, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(window->mRenderer,
+                     texture->texture,
+                     texture->clippingRectangle,
+                     &renderQuad,
+                     texture->drawAngle,
+                     texture->drawCenter,
+                     texture->drawFlip);
 }
 
-// Renders texture at given point
-void render_ct(SDL_Renderer* renderer, LTexture toRender, int x, int y,
-               SDL_Rect* clip,
-               double angle, SDL_Point* center, SDL_RendererFlip flip) {
-    // USEFUL DEFAULT VALUES:
-    // clip = NULL
-    // angle = 0.0
-    // center = NULL
-    // flip = SDL_FLIP_NONE
+/* // Renders texture at given point */
+/* void render_c(SDL_Renderer* renderer, LTexture toRender, int x, int y, */
+/*                SDL_Rect* clip) { */
+/*     // USEFUL DEFAULT VALUES: */
+/*     // clip = NULL */
     
-    // Set rendering space
-    SDL_Rect renderQuad = { x, y, toRender.mWidth, toRender.mHeight };
+/*     // Set rendering space */
+/*     SDL_Rect renderQuad = { x, y, toRender.width, toRender.height }; */
 
-    // Set clip rendering dimensions
-    if (clip != NULL) {
-        renderQuad.w = clip->w;
-        renderQuad.h = clip->h;
-    }
+/*     // Set clip rendering dimensions */
+/*     if (clip != NULL) { */
+/*         renderQuad.w = clip->w; */
+/*         renderQuad.h = clip->h; */
+/*     } */
 
-    // Render to screen
-    SDL_RenderCopyEx(renderer, toRender.mTexture, clip, &renderQuad,
-                     angle, center, flip);
-}
+/*     // Render to screen */
+/*     SDL_RenderCopyEx(renderer, toRender.texture, clip, &renderQuad, */
+/*                      0.0, NULL, SDL_FLIP_NONE); */
+/* } */
+
+/* // Renders texture at given point */
+/* void render_ct(SDL_Renderer* renderer, LTexture toRender, int x, int y, */
+/*                SDL_Rect* clip, */
+/*                double angle, SDL_Point* center, SDL_RendererFlip flip) { */
+/*     // USEFUL DEFAULT VALUES: */
+/*     // clip = NULL */
+/*     // angle = 0.0 */
+/*     // center = NULL */
+/*     // flip = SDL_FLIP_NONE */
+    
+/*     // Set rendering space */
+/*     SDL_Rect renderQuad = { x, y, toRender.width, toRender.height }; */
+
+/*     // Set clip rendering dimensions */
+/*     if (clip != NULL) { */
+/*         renderQuad.w = clip->w; */
+/*         renderQuad.h = clip->h; */
+/*     } */
+
+/*     // Render to screen */
+/*     SDL_RenderCopyEx(renderer, toRender.texture, clip, &renderQuad, */
+/*                      angle, center, flip); */
+/* } */

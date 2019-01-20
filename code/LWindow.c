@@ -6,8 +6,6 @@
 
 #include "LWindow.h"
 
-static int prepareForRender(LWindow* window);
-
 bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenHeight) {
     window->mWindow = SDL_CreateWindow("SDL Tutorial",
                                        SDL_WINDOWPOS_UNDEFINED,
@@ -28,7 +26,7 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
                                                SDL_RENDERER_PRESENTVSYNC);
         if (window->mRenderer != NULL) {
             // Initialize renderer color
-            prepareForRender(window);
+            /* prepareForRender(window); */
 
             // Grab window identifier
             window->mWindowID = SDL_GetWindowID(window->mWindow);
@@ -200,11 +198,18 @@ void LW_focus(LWindow* window) {
     SDL_RaiseWindow(window->mWindow);
 }
 
+int LW_prepareForRender(LWindow* window, SDL_Color wipeColor) {
+    SDL_SetRenderDrawColor(window->mRenderer,
+                           wipeColor.r,
+                           wipeColor.g,
+                           wipeColor.b,
+                           wipeColor.a);
+    
+    return SDL_RenderClear(window->mRenderer);
+}
+
 void LW_render(LWindow* window) {
     if (!window->mMinimized) {
-        // Clear Screen
-        prepareForRender(window);
-
         // Update Screen
         SDL_RenderPresent(window->mRenderer);
     }
@@ -249,8 +254,4 @@ bool LW_isShown(LWindow* window) {
 }
 
 
-// Static methods
-static int prepareForRender(LWindow* window) {
-    SDL_SetRenderDrawColor(window->mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    return SDL_RenderClear(window->mRenderer);
-}
+

@@ -42,6 +42,10 @@ void LW_setFullScreenStateTo(LWindow* window, bool active);
 // Moves the window to the front of the screen
 void LW_focus(LWindow* window);
 
+// Sets up the next frame to be rendered to be a blanks slate of color
+// wipeColor.  Returns 0 on succes and <0 on failure
+int LW_prepareForRender(LWindow* window, SDL_Color wipeColor);
+
 // Renders a new frame to the window
 void LW_render(LWindow* window);
 
