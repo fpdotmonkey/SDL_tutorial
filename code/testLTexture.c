@@ -8,27 +8,6 @@
 #define SCREEN_WIDTH 600
 
 int main(int argc, char **argv) {
-
-    // Initialize the Libraries
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        ErrorSDL("Failed to initialize SDL!");
-        
-        return 1;
-    }
-
-    int IMG_flags = IMG_INIT_PNG;
-    if (! (IMG_Init(IMG_flags) & IMG_flags)) {
-        ErrorIMG("Failed to initialize SDL_IMG!");
-
-        return 1;
-    }
-
-    if (TTF_Init() < 0) {
-        ErrorTTF("Failed to initialize SDL_TTF!");
-        
-        return 1;
-    }
-
     
     // Initialize the window and textures
     LWindow window;

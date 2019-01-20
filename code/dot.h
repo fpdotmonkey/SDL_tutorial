@@ -4,8 +4,8 @@
 // Copyright (c) 2018 Fletcher Porter
 //
 
-#ifndef DOT_H
-#define DOT_H
+#ifndef __DOT_H__
+#define __DOT_H__
 
 
 #include <SDL.h>
@@ -13,29 +13,32 @@
 
 #include "bool.h"
 #include "LTexture.h"
+#include "Particle.h"
 
 
 typedef struct {
-    int mWidth, mHeight;
-    int mPosX, mPosY;
-    int mVelX, mVelY;
-    LTexture mLTexture;
-    SDL_Rect mCollider;
+    int width, height;
+    int positionX, positionY;
+    int velocityX, velocityY;
+    LTexture texture;
+    SDL_Rect collider;
+
+    int numberOfParticles;
+    Particle *particles;
 } Dot;
 
 
-void initDot(SDL_Renderer* renderer, Dot *dot, int w, int h, int xi, int yi);
+void Dot_init(Dot *dot, LWindow *window, int w, int h, int xi, int yi);
 
-void closeDot(Dot *dot);
+void Dot_free(Dot *dot);
 
-void handleEventDot(Dot *dot, SDL_Event* e);
+void Dot_handleEvent(Dot *dot, SDL_Event* inputEvent);
 
-bool checkCollision(SDL_Rect a, SDL_Rect b);
+bool Dot_checkCollision(SDL_Rect a, SDL_Rect b);
 
-void updatePositionDot(Dot *dot, SDL_Rect wall,
-                       int levelWidth, int levelHeight);
+void Dot_updatePosition(Dot *dot, int levelWidth, int levelHeight);
 
-void renderDot(SDL_Renderer* renderer, Dot *dot, int camX, int camY);
+void Dot_draw(Dot *dot, LWindow *window, int cameraX, int cameraY);
 
 
-#endif
+#endif  // __DOT_H__

@@ -29,9 +29,9 @@ typedef struct {
     bool mMouseFocus, mKeyboardFocus, mFullScreen, mMinimized, mShown;
 } LWindow;
 
-// Initialize a window, macros SCREEN_WIDTH and SCREEN_HEIGHT must be
-// defined prior to this function being called
-bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenHeight);
+// Initialize a window.  This also initializes SDL in the process
+bool LW_init(LWindow* window,
+             int numberOfDisplays, int screenWidth, int screenHeight);
 
 // Handles window events for the window
 void LW_handleEvent(LWindow* window, SDL_Event* event);

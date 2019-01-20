@@ -8,6 +8,7 @@
 
 
 bool LT_init(LTexture *texture) {
+    // Initialize the LTexture
     texture->texture = NULL;
     
     texture->clippingRectangle = NULL;
@@ -64,6 +65,8 @@ bool LT_loadImage(LTexture *texture, LWindow *window, char* fromPath) {
                                                         loadedSurface);
         if (texture->texture == NULL) {
             ErrorSDL_path("Unable to create texture!", fromPath);
+
+            return false;
         } else {
             // Get image dimensions
             texture->width = loadedSurface->w;
@@ -147,11 +150,6 @@ void LT_draw(LTexture *texture, LWindow *window,
              int x, int y, int width, int height) {    
     // Set rendering space
     SDL_Rect renderQuad = { x, y, width, height };
-
-    /* if (texture->clippingRectangle != NULL) { */
-    /*     renderQuad.w = texture->clippingRectangle->w; */
-    /*     renderQuad.h = texture->clippingRectangle->h; */
-    /* } */
     
     // Render to screen
     SDL_RenderCopyEx(window->mRenderer,
@@ -163,46 +161,11 @@ void LT_draw(LTexture *texture, LWindow *window,
                      texture->drawFlip);
 }
 
-/* // Renders texture at given point */
-/* void render_c(SDL_Renderer* renderer, LTexture toRender, int x, int y, */
-/*                SDL_Rect* clip) { */
-/*     // USEFUL DEFAULT VALUES: */
-/*     // clip = NULL */
-    
-/*     // Set rendering space */
-/*     SDL_Rect renderQuad = { x, y, toRender.width, toRender.height }; */
 
-/*     // Set clip rendering dimensions */
-/*     if (clip != NULL) { */
-/*         renderQuad.w = clip->w; */
-/*         renderQuad.h = clip->h; */
-/*     } */
+int LT_width(Dot *dot) {
+    return dot->width;
+}
 
-/*     // Render to screen */
-/*     SDL_RenderCopyEx(renderer, toRender.texture, clip, &renderQuad, */
-/*                      0.0, NULL, SDL_FLIP_NONE); */
-/* } */
-
-/* // Renders texture at given point */
-/* void render_ct(SDL_Renderer* renderer, LTexture toRender, int x, int y, */
-/*                SDL_Rect* clip, */
-/*                double angle, SDL_Point* center, SDL_RendererFlip flip) { */
-/*     // USEFUL DEFAULT VALUES: */
-/*     // clip = NULL */
-/*     // angle = 0.0 */
-/*     // center = NULL */
-/*     // flip = SDL_FLIP_NONE */
-    
-/*     // Set rendering space */
-/*     SDL_Rect renderQuad = { x, y, toRender.width, toRender.height }; */
-
-/*     // Set clip rendering dimensions */
-/*     if (clip != NULL) { */
-/*         renderQuad.w = clip->w; */
-/*         renderQuad.h = clip->h; */
-/*     } */
-
-/*     // Render to screen */
-/*     SDL_RenderCopyEx(renderer, toRender.texture, clip, &renderQuad, */
-/*                      angle, center, flip); */
-/* } */
+int LT_height(Dot *dot) {
+    return dot->height;
+}

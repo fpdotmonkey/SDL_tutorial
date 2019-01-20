@@ -6,75 +6,75 @@
 
 #include "dot.h"
 
-void initDot(SDL_Renderer* renderer, Dot *dot, int xi, int yi, int w, int h) {
-    dot->mPosX = xi;
-    dot->mPosY = yi;
-    dot->mWidth = w;
-    dot->mHeight = h;
-    dot->mVelX = 0;
-    dot->mVelY = 0;
+void Dot_init(Dot *dot, LWindow *window, int xi, int yi, int w, int h) {
+    dot->positionX = xi;
+    dot->positionY = yi;
+    dot->width = w;
+    dot->height = h;
+    dot->velocityX = 0;
+    dot->velocityY = 0;
 
-    dot->mLTexture = loadLTexture("dot.bmp", renderer);
-    if (dot->mLTexture.mTexture == NULL) {
-        printf("Failed to load dot texture!\n");
-    }
+    LT_init(&dot->texture);
+    LT_loadImage(&dot->texture, window, "../dot.png");
 
-    dot->mCollider.x = dot->mPosX;
-    dot->mCollider.y = dot->mPosY;
-    dot->mCollider.w = dot->mWidth;
-    dot->mCollider.h = dot->mHeight;
+    dot->collider.x = dot->positionX;
+    dot->collider.y = dot->positionY;
+    dot->collider.w = dot->width;
+    dot->collider.h = dot->height;
 }
 
-void closeDot(Dot *dot) {
-    freeLTexture(dot->mLTexture);
+void Dot_free(Dot *dot) {
+    LT_free(&dot->texture);
+
+    dot = NULL;
 }
 
-void handleEventDot(Dot *dot, SDL_Event* e) {
+void Dot_handleEvent(Dot *dot, SDL_Event* inputEvent) {
     const int DV = 10;
-    if (e->type == SDL_KEYDOWN && e->key.repeat == 0) {
+    if (inputEvent->type == SDL_KEYDOWN && inputEvent->key.repeat == 0) {
         // Adjust the velocity
-        switch (e->key.keysym.sym) {
+        switch (inputEvent->key.keysym.sym) {
         case SDLK_UP:
-            dot->mVelY -= DV;
+            dot->velocityY -= DV;
             break;
 
         case SDLK_DOWN:
-            dot->mVelY += DV;
+            dot->velocityY += DV;
             break;
 
         case SDLK_LEFT:
-            dot->mVelX -= DV;
+            dot->velocityX -= DV;
             break;
 
         case SDLK_RIGHT:
-            dot->mVelX += DV;
+            dot->velocityX += DV;
             break;
         }
     }
 
-    if (e->type == SDL_KEYUP && e->key.repeat == 0) {
+    if (inputEvent->type == SDL_KEYUP && inputEvent->key.repeat == 0) {
         // Adjust the velocity
-        switch (e->key.keysym.sym) {
+        switch (inputEvent->key.keysym.sym) {
         case SDLK_UP:
-            dot->mVelY += DV;
+            dot->velocityY += DV;
             break;
 
         case SDLK_DOWN:
-            dot->mVelY -= DV;
+            dot->velocityY -= DV;
             break;
 
         case SDLK_LEFT:
-            dot->mVelX += DV;
+            dot->velocityX += DV;
             break;
 
         case SDLK_RIGHT:
-            dot->mVelX -= DV;
+            dot->velocityX -= DV;
             break;
         }
     }
 }
 
-bool checkCollision(SDL_Rect a, SDL_Rect b) {
+bool Dot_checkCollision(SDL_Rect a, SDL_Rect b) {
     // The sides of the rectangles
     int leftA, leftB;
     int rightA, rightB;
@@ -110,30 +110,39 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
     return true;
 }
 
-void updatePositionDot(Dot *dot, SDL_Rect wall,
-                       int levelWidth, int levelHeight) {    
-    dot->mPosX += dot->mVelX;
-    dot->mPosY += dot->mVelY;
-    dot->mCollider.x = dot->mPosX;
-    dot->mCollider.y = dot->mPosY;
+void Dot_updatePosition(Dot *dot, int levelWidth, int levelHeight) {    
+    dot->positionX += dot->velocityX;
+    dot->positionY += dot->velocityY;
+    dot->collider.x = dot->positionX;
+    dot->collider.y = dot->positionY;
 
-    if ((dot->mPosX < 0)
-        || (dot->mPosX + dot->mWidth > levelWidth)) {
+    if ((dot->positionX < 0)
+        || (dot->positionX + dot->width > levelWidth)) {
         // Move back
-        dot->mPosX -= dot->mVelX;
-        dot->mCollider.x = dot->mPosX;
+        dot->positionX -= dot->velocityX;
+        dot->collider.x = dot->positionX;
     }
 
-    if ((dot->mPosY < 0)
-        || (dot->mPosY + dot->mHeight > levelHeight)) {
+    if ((dot->positionY < 0)
+        || (dot->positionY + dot->height > levelHeight)) {
         // Move back
-        dot->mPosY -= dot->mVelY;
-        dot->mCollider.x = dot->mPosY;
+        dot->positionY -= dot->velocityY;
+        dot->collider.x = dot->positionY;
     }
  
 }
 
-void renderDot(SDL_Renderer* renderer, Dot *dot, int camX, int camY) {
+void Dot_draw(Dot *dot, LWindow *window, int cameraX, int cameraY) {
     // Render dot relative to camera
-    render(renderer, dot->mLTexture, dot->mPosX - camX, dot->mPosY - camY);
+    LT_draw(&dot->texture,
+            window,
+            dot->positionX - cameraX, dot->positionY - cameraY,
+            dot->width, dot->height);
+}
+
+
+// PRIVATE
+
+static void drawParticles(Dot *dot) {
+
 }

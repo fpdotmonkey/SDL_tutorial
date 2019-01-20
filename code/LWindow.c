@@ -6,7 +6,13 @@
 
 #include "LWindow.h"
 
-bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenHeight) {
+bool LW_init(LWindow* window,
+             int numberOfDisplays,
+             int screenWidth,
+             int screenHeight) {
+
+    
+    // Initialize the LWindow
     window->mWindow = SDL_CreateWindow("SDL Tutorial",
                                        SDL_WINDOWPOS_UNDEFINED,
                                        SDL_WINDOWPOS_UNDEFINED,
@@ -47,6 +53,16 @@ bool LW_init(LWindow* window, int numberOfDisplays, int screenWidth, int screenH
     }
 
     return window->mWindow != NULL && window->mRenderer != NULL;
+}
+
+void LW_free(LWindow* window) {
+    // Destroy Window
+    SDL_DestroyWindow(window->mWindow);
+    SDL_DestroyRenderer(window->mRenderer);
+    window->mWindow = NULL;
+    window->mRenderer = NULL;
+
+    window = NULL;
 }
 
 void LW_handleEvent(LWindow* window, SDL_Event* event) {
@@ -213,14 +229,6 @@ void LW_render(LWindow* window) {
         // Update Screen
         SDL_RenderPresent(window->mRenderer);
     }
-}
-
-void LW_free(LWindow* window) {
-    // Destroy Window
-    SDL_DestroyWindow(window->mWindow);
-    SDL_DestroyRenderer(window->mRenderer);
-    window->mWindow = NULL;
-    window->mRenderer = NULL;
 }
 
 

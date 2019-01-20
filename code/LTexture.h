@@ -58,4 +58,9 @@ void LT_draw(LTexture *texture, LWindow *window,
              int x, int y, int width, int height);
 
 
+// Accessors
+int LT_width(Dot *dot);
+int LT_height(Dot *dot);
+
+
 #endif // __LTEXTURE_H__
