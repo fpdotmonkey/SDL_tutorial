@@ -38,7 +38,7 @@ void LT_free(LTexture *texture);
 // Loads image at specified path
 bool LT_loadImage(LTexture *texture, LWindow *window, char* path);
 
-bool LT_loadFont(LTexture *texture, char* path);
+bool LT_loadFont(LTexture *texture, char* path, int pointSize);
 
 void LT_setTextColor(LTexture *texture, SDL_Color toColor);
 

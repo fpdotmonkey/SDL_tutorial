@@ -77,9 +77,22 @@ bool LT_loadImage(LTexture *texture, LWindow *window, char* fromPath) {
     }
 }
 
-bool LT_loadFont(LTexture *texture, char* fromPath);
+bool LT_loadFont(LTexture *texture, char* fromPath, int pointSize) {
+    texture->textFont = TTF_OpenFont(fromPath, pointSize);
 
-void LT_setTextColor(LTexture *texture, SDL_Color toColor);
+    if (texture->textFont != NULL) {
+        
+        return true;
+    } else {
+        ErrorTTF_path("Could not load font!", fromPath);
+    }
+
+    return false;
+}
+
+void LT_setTextColor(LTexture *texture, SDL_Color toColor) {
+    texture->textColor = toColor;
+}
 
 // Creates image from font string
 bool LT_generateText(LTexture *texture,
